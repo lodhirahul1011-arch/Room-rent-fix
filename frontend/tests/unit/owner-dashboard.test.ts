@@ -4,8 +4,10 @@ import { calculateOwnerSummary } from '@/features/owner-dashboard/utils';
 
 describe('Owner dashboard financial invariants', () => {
   it('reconciles property collections to the current monthly trend', () => {
-    const summary = calculateOwnerSummary(ownerProperties, ownerRentTrend);
-    const current = ownerRentTrend.at(-1)!;
+    const properties=[{id:'test',name:'Test property',location:'Test location',rooms:2,occupiedRooms:1,expectedRent:1000,collectedRent:700}];
+    const trend=[{month:'Nov',expected:1000,collected:700,pending:200,overdue:100}];
+    const summary = calculateOwnerSummary(properties, trend);
+    const current = trend.at(-1)!;
     expect(summary.expectedRent).toBe(current.expected);
     expect(summary.collectedRent).toBe(current.collected);
     expect(summary.pendingRent).toBe(summary.expectedRent - summary.collectedRent);

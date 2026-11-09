@@ -1,10 +1,9 @@
 'use client';
-import {createContext,useCallback,useContext,useEffect,useState,type ReactNode} from 'react';
-import {initialPlatform,type Platform} from './engine';
-const KEY='roomrent-phase7-platform-v1';
+import {createContext,useContext,type ReactNode} from 'react';
+import type {Platform} from './engine';
+import {emptyPlatform,removeDemoPlatform} from './clean-data';
+import {useBrowserState} from '@/features/workspace/browser-state';
 const Context=createContext<{data:Platform;ready:boolean;update:(fn:(s:Platform)=>Platform)=>void}|null>(null);
-export function PlatformProvider({children}:{children:ReactNode}){const [data,setData]=useState<Platform>(initialPlatform);const [ready,setReady]=useState(false);
-useEffect(()=>{try{const raw=window.localStorage.getItem(KEY);if(raw){const parsed=JSON.parse(raw) as Platform;if(Array.isArray(parsed.owners)&&Array.isArray(parsed.subscriptions)&&Array.isArray(parsed.approvals)&&Array.isArray(parsed.cctv)&&Array.isArray(parsed.tablets)&&Array.isArray(parsed.calls))setData(parsed)}}catch{}setReady(true)},[]);
-const update=useCallback((fn:(s:Platform)=>Platform)=>{setData(prev=>{const next=fn(prev);try{window.localStorage.setItem(KEY,JSON.stringify(next))}catch{}return next})},[]);
-return <Context.Provider value={{data,ready,update}}>{children}</Context.Provider>}
-export function usePlatform(){const v=useContext(Context);if(!v)throw Error('PlatformProvider missing');return v}
+const normalize=(raw:unknown):Platform=>{const value=raw as Platform;if(!value||!['owners','subscriptions','approvals','cctv','tablets','calls'].every(key=>Array.isArray(value[key as keyof Platform])))throw Error('Invalid platform');return removeDemoPlatform(value)};
+export function PlatformProvider({children}:{children:ReactNode}){const state=useBrowserState('roomrent-phase7-platform-v1',emptyPlatform,normalize,'platform');return <Context.Provider value={{data:state.value,ready:state.ready,update:state.update}}>{children}</Context.Provider>}
+export function usePlatform(){const context=useContext(Context);if(!context)throw Error('PlatformProvider missing');return context;}

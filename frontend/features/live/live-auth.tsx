@@ -14,7 +14,7 @@ export function LiveAuth({mode}:{mode:'login'|'register'}){
  {mode==='register'&&<><label className="block text-sm font-medium">Full name</label><input className={field} required minLength={2} value={name} onChange={e=>setName(e.target.value)}/><label className="block text-sm font-medium">Account type</label><select className={field} value={role} onChange={e=>setRole(e.target.value as 'owner'|'tenant')}><option value="owner">Property owner</option><option value="tenant">Tenant</option></select></>}
  <label className="block text-sm font-medium">Email</label><input className={field} type="email" required autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)}/><label className="block text-sm font-medium">Password</label><input className={field} type="password" required minLength={mode==='register'?10:1} autoComplete={mode==='login'?'current-password':'new-password'} value={password} onChange={e=>setPassword(e.target.value)}/>
  {error&&<p role="status" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{error}</p>}
- <button disabled={busy} className="w-full rounded-lg bg-teal-700 px-4 py-3 font-semibold text-white disabled:opacity-50">{busy?'Working…':mode==='login'?'Sign in':'Register'}</button>
+ <button disabled={busy} className="w-full rounded-lg bg-teal-700 px-4 py-3 font-semibold text-white disabled:opacity-50" data-action-tone="success">{busy?'Working…':mode==='login'?'Sign in':'Register'}</button>
  <a className="block text-center text-sm text-teal-700 underline" href={mode==='login'?'/register':'/login'}>{mode==='login'?'Create an account':'Already registered? Sign in'}</a></form></div>
 }
 export function LiveGuard({children}:{children:ReactNode}){

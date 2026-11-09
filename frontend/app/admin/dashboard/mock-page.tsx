@@ -1,5 +1,2 @@
-import { DashboardView } from '@/components/roomrent-shell';
-
-export default function AdminDashboardPage() {
-  return <DashboardView role="admin" />;
-}
+import {AdminOverview} from '@/features/workspace/admin-overview';
+export default function Page(){return <AdminOverview/>}

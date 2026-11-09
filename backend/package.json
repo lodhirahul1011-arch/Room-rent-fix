@@ -5,29 +5,36 @@
   "type": "commonjs",
   "scripts": {
     "dev": "node --watch src/server.js",
+    "dev:support": "node --watch src/support-server.js",
     "start": "node src/server.js",
+    "start:support": "node src/support-server.js",
     "test": "node --test --test-concurrency=1 tests/*.test.js",
     "check": "node --check src/server.js",
     "worker": "node src/worker.js",
     "test:b7": "node --test tests/b7-*.test.js",
     "test:integration": "node -e \"if(!process.env.B7_TEST_MONGO_URI){console.error('B7_TEST_MONGO_URI required for integration');process.exit(1)}\" && node --test tests/b7-integration.test.js",
-    "test:b8": "node --test tests/b8-http-integration.test.js"
+    "test:b8": "node --test tests/b8-http-integration.test.js",
+    "test:meters": "node --test --test-concurrency=1 tests/meter-rules.test.js tests/meter-integration.test.js",
+    "test:all:disposable": "node tests/run-all-disposable.cjs"
   },
   "dependencies": {
-    "express": "^4.22.2",
-    "mongoose": "^8.24.0",
+    "@aws-sdk/client-s3": "^3.1164.0",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
     "cors": "^2.8.5",
-    "helmet": "^7.1.0",
-    "express-rate-limit": "^7.1.5",
     "dotenv": "^16.6.1",
-    "zod": "^3.24.2",
+    "express": "^4.22.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.24.0",
     "multer": "^1.4.5-lts.2",
     "pdfkit": "^0.16.0",
-    "socket.io": "^4.8.1"
+    "sharp": "^0.35.5",
+    "socket.io": "^4.8.1",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
+    "mongodb-memory-server": "^11.3.0",
     "socket.io-client": "^4.8.1"
   }
 }

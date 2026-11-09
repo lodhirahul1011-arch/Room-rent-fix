@@ -6,4 +6,5 @@ function hash(buffer){return crypto.createHash('sha256').update(buffer).digest('
 function currentMonth(date){return date.toISOString().slice(0,7)}
 function reminderCategory(due,today){const a=Date.parse(due+'T00:00:00Z'),b=Date.parse(today+'T00:00:00Z');if(!Number.isFinite(a)||!Number.isFinite(b))return null;const days=Math.round((b-a)/86400000);return days===-3?'upcoming':days===0?'due':days===3?'overdue-3':days===15?'overdue-15':null}
 function recipientPermission(actor,asset){if(actor.role==='owner'||actor.role==='manager')return !!actor.organizationId&&String(actor.organizationId)===String(asset.organizationId);return actor.role==='tenant'&&String(actor.tenantId||'')===String(asset.tenantId||'')&&String(actor.organizationId||'')===String(asset.organizationId||'')}
-module.exports={validUpload,safeFilename,hash,currentMonth,reminderCategory,recipientPermission};
+function contentDisposition(name,inline=false){const value=safeFilename(name),ascii=value.replace(/[^\x20-\x7e]/g,'_').replace(/["\\]/g,'_'),encoded=encodeURIComponent(value).replace(/['()*]/g,c=>'%'+c.charCodeAt(0).toString(16).toUpperCase());return `${inline?'inline':'attachment'}; filename="${ascii}"; filename*=UTF-8''${encoded}`}
+module.exports={contentDisposition,validUpload,safeFilename,hash,currentMonth,reminderCategory,recipientPermission};

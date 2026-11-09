@@ -188,26 +188,20 @@ test('Master QA: Complete Live-Mode Tenant Journey, Financial Concurrency, and S
     assert.equal(ownTenancies.body.data.length, 1);
     assert.equal(ownTenancies.body.data[0].status, 'active');
 
-    // 14. Electricity Meter Reading Recording by Owner
-    const meterRes = await call('POST', '/api/meters/readings', ownerAToken, {
-      roomId,
-      month: currentMonth,
-      previous: 1200,
-      current: 1350, // 150 units consumed
-      ratePaise: 800 // ₹8.00 per unit = ₹1,200.00 (120000 paise)
-    });
-    assert.equal(meterRes.status, 201, `Meter reading failed: ${JSON.stringify(meterRes.body)}`);
-    assert.equal(meterRes.body.data.amountPaise, 120000);
 
-    // 15. Monthly Rent Invoice Generation (combines ₹18,000 rent + ₹1,200 electricity = ₹19,200)
-    const invoiceGenRes = await call('POST', '/api/invoices/generate', ownerAToken, {
-      month: currentMonth,
-      dueDay: 5
-    });
-    assert.equal(invoiceGenRes.status, 201);
-    assert.equal(invoiceGenRes.body.data.length, 1, 'Exactly 1 invoice generated');
-    const invoiceId = invoiceGenRes.body.data[0]._id;
-
+    // 14. Create the immutable base rent invoice, then amend it through secure meter finalization.
+    const invoiceGenRes = await call('POST', '/api/invoices/generate', ownerAToken, {month:currentMonth,dueDay:5});
+    assert.equal(invoiceGenRes.status,201);assert.equal(invoiceGenRes.body.data.length,1);
+    const invoiceId=invoiceGenRes.body.data[0]._id;
+    const meterInit=await call('POST','/api/meters',ownerAToken,{roomId,label:'Master QA meter',baselineReading:1200,baselineDate:moveInDate,baselineReason:'Verified meter at tenant move-in'});
+    assert.equal(meterInit.status,201,JSON.stringify(meterInit.body));
+    const meterRes=await call('POST','/api/meters/readings',ownerAToken,{roomId,month:currentMonth,previous:1200,current:1350,ratePaise:800,readingDate:moveInDate,relatedInvoiceId:invoiceId});
+    assert.equal(meterRes.status,201,JSON.stringify(meterRes.body));assert.equal(meterRes.body.data.amountPaise,120000);
+    const photo=await require('sharp')({create:{width:20,height:20,channels:3,background:{r:120,g:140,b:150}}}).png().toBuffer();
+    const meterPhoto=new FormData();meterPhoto.append('file',new Blob([photo],{type:'image/png'}),'meter.png');
+    const uploaded=await call('POST','/api/meters/readings/'+meterRes.body.data._id+'/photo',ownerAToken,meterPhoto);assert.equal(uploaded.status,201,JSON.stringify(uploaded.body));
+    const finalized=await call('POST','/api/meters/readings/'+meterRes.body.data._id+'/finalize',ownerAToken,{});assert.equal(finalized.status,200,JSON.stringify(finalized.body));
+    // 15. Original rent remains INR 18,000; the electricity revision adds INR 1,200.
     // 16. Invoice Idempotency: Rerun generates 0 new invoices
     const rerunGen = await call('POST', '/api/invoices/generate', ownerAToken, {
       month: currentMonth,

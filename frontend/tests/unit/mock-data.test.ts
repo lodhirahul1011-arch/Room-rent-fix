@@ -12,16 +12,16 @@ describe('RoomRent mock data', () => {
     expect(formatINR(18500)).toContain('18,500');
   });
 
-  it('calculates owner totals from the shared records', () => {
+  it('starts owner totals without sample records', () => {
     const summary = calculateOwnerSummary(ownerProperties, ownerRentTrend);
-    expect(summary.totalRooms).toBe(62);
-    expect(summary.occupiedRooms).toBe(55);
-    expect(summary.vacantRooms).toBe(7);
+    expect(summary.totalRooms).toBe(0);
+    expect(summary.occupiedRooms).toBe(0);
+    expect(summary.vacantRooms).toBe(0);
     expect(summary.activeTenants).toBe(summary.occupiedRooms);
-    expect(summary.expectedRent).toBe(990000);
-    expect(summary.collectedRent).toBe(898000);
-    expect(summary.overdueRent).toBe(30000);
-    expect(summary.pendingRent).toBe(92000);
+    expect(summary.expectedRent).toBe(0);
+    expect(summary.collectedRent).toBe(0);
+    expect(summary.overdueRent).toBe(0);
+    expect(summary.pendingRent).toBe(0);
   });
 
   it('keeps every quick action connected to a destination', () => {

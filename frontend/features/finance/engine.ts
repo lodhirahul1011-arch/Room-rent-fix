@@ -4,7 +4,7 @@ export type InvoiceItem = {kind:ChargeKind; label:string; amountPaise:number};
 export type Invoice = {id:string; key:string; tenancyId:string; tenantId:string; propertyId:string; roomId:string; month:string; issuedAt:string; dueDate:string; originalItems:InvoiceItem[]; status:'issued';};
 export type PenaltyRule = {graceDays:number; mode:'fixed'|'per-day'|'percentage'; value:number};
 export type Penalty = {id:string; invoiceId:string; appliedAt:string; amountPaise:number; rule:PenaltyRule};
-export type Payment = {id:string; invoiceId:string; tenantId:string; amountPaise:number; method:'upi'|'bank'|'cash'; reference:string; proof?:{name:string;size:number;type:string}; status:'submitted'|'verified'|'rejected'; rejectionReason?:string; submittedAt:string; decidedAt?:string};
+export type Payment = {id:string; invoiceId:string; tenantId:string; amountPaise:number; method:'upi'|'bank'|'cash'; reference:string; proof?:{name:string;size:number;type:string;stored?:boolean}; status:'submitted'|'verified'|'rejected'; rejectionReason?:string; submittedAt:string; decidedAt?:string};
 export type Adjustment = {id:string; invoiceId:string; amountPaise:number; reason:string; createdAt:string; reversesId?:string};
 export type MeterRecord = {id:string; invoiceId:string; roomId:string; month:string; previous:number; current:number; ratePaise:number; amountPaise:number; recordedAt:string};
 export type FinanceState = {invoices:Invoice[]; penalties:Penalty[]; payments:Payment[]; adjustments:Adjustment[]; meters:MeterRecord[]; rule:PenaltyRule};
@@ -68,7 +68,7 @@ export function applyPenalty(s:FinanceState,invoiceId:string,asOf:string):Financ
  const amount=penaltyForInvoice(s,i,asOf);if(amount<=0)return s;
  return {...s,penalties:[...s.penalties,{id:crypto.randomUUID(),invoiceId,appliedAt:asOf,amountPaise:amount,rule:{...s.rule}}]};
 }
-export function submitPayment(s:FinanceState,invoiceId:string,amountPaise:number,method:Payment['method'],reference:string,proof?:Payment['proof']):FinanceState{
+export function submitPayment(s:FinanceState,invoiceId:string,amountPaise:number,method:Payment['method'],reference:string,proof?:Payment['proof'],paymentId:string=crypto.randomUUID()):FinanceState{
  const i=s.invoices.find(x=>x.id===invoiceId);if(!i)throw Error('Invoice not found');
  if(!Number.isSafeInteger(amountPaise)||amountPaise<=0||amountPaise>invoiceBalance(s,i))throw Error('Amount exceeds outstanding balance');
  if(!['upi','bank','cash'].includes(method)||!reference.trim())throw Error('Payment method and reference required');
@@ -77,7 +77,7 @@ export function submitPayment(s:FinanceState,invoiceId:string,amountPaise:number
  if(s.payments.some(p=>p.invoiceId===invoiceId&&p.reference.toLocaleLowerCase('en-IN')===reference.trim().toLocaleLowerCase('en-IN')&&p.status!=='rejected'))throw Error('Duplicate payment reference');
  const reserved=s.payments.filter(p=>p.invoiceId===invoiceId&&p.status==='submitted').reduce((a,p)=>a+p.amountPaise,0);
  if(amountPaise>invoiceBalance(s,i)-reserved)throw Error('Existing pending payment proof already reserves this amount');
- return {...s,payments:[...s.payments,{id:crypto.randomUUID(),invoiceId,tenantId:i.tenantId,amountPaise,method,reference:reference.trim(),proof,status:'submitted',submittedAt:new Date().toISOString()}]};
+ return {...s,payments:[...s.payments,{id:paymentId,invoiceId,tenantId:i.tenantId,amountPaise,method,reference:reference.trim(),proof,status:'submitted',submittedAt:new Date().toISOString()}]};
 }
 export function decidePayment(s:FinanceState,paymentId:string,approve:boolean,reason=''):FinanceState{
  const p=s.payments.find(x=>x.id===paymentId);if(!p||p.status!=='submitted')throw Error('Payment already decided or missing');

@@ -17,6 +17,6 @@ r.post('/documents/:tenantId',upload.single('file'),asyncRoute(async(req,res)=>{
 }));
 r.get('/:id/download',asyncRoute(async(req,res)=>{
  const asset=await M.FileAsset.findById(req.params.id);if(!asset||!rules.recipientPermission(req.actor,asset))fail(404,'File not found');
- const data=await storage.read(asset.storageKey);res.set('Cache-Control','no-store');res.set('X-Content-Type-Options','nosniff');res.set('Content-Type',asset.mime);res.set('Content-Disposition',`attachment; filename="${rules.safeFilename(asset.originalName).replace(/"/g,'')}"`);res.send(data)
+ if(asset.kind==='meter-photo')await require('../meters/service').authorizedPhoto(req.actor,asset.relatedId,asset.id);const data=await storage.read(asset.storageKey);res.set('Cache-Control','no-store');res.set('X-Content-Type-Options','nosniff');res.set('Content-Type',asset.mime);res.set('Content-Disposition',rules.contentDisposition(asset.originalName));res.send(data)
 }));
 module.exports=r;

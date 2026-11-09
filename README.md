@@ -34,6 +34,12 @@ roomrent/
 6. Start backend with `npm run dev:backend` and frontend in a separate terminal with `npm run dev:frontend` (or root `npm run dev`).
 7. Check `http://localhost:5000/api/health` and `http://localhost:3000/login`.
 
+### Support email
+
+The admin Support page submits tickets to `POST /api/support/tickets`. Configure `RESEND_API_KEY`, `RESEND_TEMPLATE_ID`, `RESEND_FROM_EMAIL`, and `CONTACT_EMAIL` in `backend/.env`. The Resend template used for the support inbox should define these variables: `ticketId`, `name`, `email`, `phone`, `subject`, `category`, `message`, and `submittedAt`. The submitter receives a separate confirmation email. The endpoint is rate-limited and reports when support delivery or confirmation delivery fails.
+
+To run support email locally without MongoDB, start `npm run dev:support` from `backend/`. This starts only the health and support endpoints on port 5000; use `npm run dev` when MongoDB is available for the full backend. Allow both `http://localhost:3000` and `http://127.0.0.1:3000` in `CORS_ORIGINS` for local browser development.
+
 The owner must create a property and enable **Accept new tenant applications** before tenant enrollment. The owner then adds a floor and room. A registered tenant applies via the catalogue, the owner approves, and **the tenant must sign out and log back in** to obtain the newly linked membership/session. Next create monthly invoices and record/verify an external payment.
 
 No actual payment gateway is implemented. Payments remain manually verified, and the tenant payment-proof flow currently stores metadata **not the file bytes**.

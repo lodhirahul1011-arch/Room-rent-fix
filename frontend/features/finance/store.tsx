@@ -1,14 +1,8 @@
 'use client';
-import {createContext,useContext,useEffect,useState,type ReactNode} from 'react';
+import {createContext,useContext,type ReactNode} from 'react';
 import {initialFinance,type FinanceState} from './engine';
-const KEY='roomrent-phase5-finance-v1';
-type ContextType={finance:FinanceState;ready:boolean;update:(updater:(state:FinanceState)=>FinanceState)=>void;reset:()=>void};
-const FinanceContext=createContext<ContextType|null>(null);
-export function FinanceProvider({children}:{children:ReactNode}){
- const [finance,setFinance]=useState<FinanceState>(initialFinance);const [ready,setReady]=useState(false);
- useEffect(()=>{try{const raw=localStorage.getItem(KEY);if(raw){const value=JSON.parse(raw) as FinanceState;if(Array.isArray(value.invoices)&&Array.isArray(value.payments)&&Array.isArray(value.penalties)&&Array.isArray(value.adjustments))setFinance({...value,meters:Array.isArray(value.meters)?value.meters:[]})}}catch{}setReady(true)},[]);
- const update=(updater:(state:FinanceState)=>FinanceState)=>setFinance(old=>{const next=updater(old);try{localStorage.setItem(KEY,JSON.stringify(next))}catch{}return next});
- const reset=()=>{setFinance(initialFinance());try{localStorage.removeItem(KEY)}catch{}};
- return <FinanceContext.Provider value={{finance,ready,update,reset}}>{children}</FinanceContext.Provider>;
-}
-export function useFinance(){const context=useContext(FinanceContext);if(!context)throw Error('FinanceProvider missing');return context;}
+import {useBrowserState} from '@/features/workspace/browser-state';
+const Context=createContext<{finance:FinanceState;ready:boolean;update:(fn:(s:FinanceState)=>FinanceState)=>void;reset:()=>void}|null>(null);
+const normalize=(raw:unknown):FinanceState=>{const value=raw as FinanceState;if(!value||!['invoices','payments','penalties','adjustments'].every(key=>Array.isArray(value[key as keyof FinanceState])))throw Error('Invalid finance records');return {...value,meters:Array.isArray(value.meters)?value.meters:[]}};
+export function FinanceProvider({children}:{children:ReactNode}){const state=useBrowserState('roomrent-phase5-finance-v1',initialFinance,normalize,'finance');return <Context.Provider value={{finance:state.value,ready:state.ready,update:state.update,reset:state.reset}}>{children}</Context.Provider>}
+export function useFinance(){const context=useContext(Context);if(!context)throw Error('FinanceProvider missing');return context;}

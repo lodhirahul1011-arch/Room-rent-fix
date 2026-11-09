@@ -7,7 +7,8 @@ function dueDate(month,day){if(!Number.isInteger(day)||day<1||day>28)fail(400,'I
 function normalizeReference(ref){if(typeof ref!=='string'||ref.trim().length<3||ref.trim().length>120)fail(400,'Invalid payment reference');return ref.trim().toLowerCase()}
 function allocationPlan(balance,amount){money(balance);money(amount,true);if(amount>balance)fail(409,'Payment exceeds invoice balance');return amount}
 function settlementAmount(held,deductions){money(held);money(deductions);if(deductions>held)fail(409,'Deductions exceed held deposit');return held-deductions}
-function meterAmount(previous,current,rate){for(const n of [previous,current,rate])money(n);if(current<previous)fail(409,'Meter reading cannot decrease');return money((current-previous)*rate)}
+function meterUnits(value){if(typeof value!=='number'||!Number.isFinite(value)||value<0||!Number.isSafeInteger(Math.round(value*1000))||Math.abs(value*1000-Math.round(value*1000))>0.000001)fail(400,'Meter readings must be nonnegative finite numbers with at most 3 decimal places');return Math.round(value*1000)}
+function meterAmount(previous,current,rate){const p=meterUnits(previous),c=meterUnits(current);money(rate);if(c<p)fail(409,'Meter reading cannot decrease; explicit meter replacement/rollover is required');return money(Number((BigInt(c-p)*BigInt(rate)+500n)/1000n))}
 function outstanding(original,penalties,adjustments,allocated){return money(original+penalties+adjustments-allocated)}
 function ensureDate(s){if(!validDate(s))fail(400,'Invalid calendar date');return s}
-module.exports={money,sum,monthBounds,dueDate,normalizeReference,allocationPlan,settlementAmount,meterAmount,outstanding,ensureDate,dateDiff,penaltyAmount};
+module.exports={money,sum,monthBounds,dueDate,normalizeReference,allocationPlan,settlementAmount,meterAmount,meterUnits,outstanding,ensureDate,dateDiff,penaltyAmount};

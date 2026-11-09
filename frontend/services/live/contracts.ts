@@ -5,7 +5,7 @@ export interface Room{_id?:string;id?:string;propertyId:string;floorId:string;nu
 export interface Tenant{_id?:string;id?:string;name:string;phone:string;email:string;emergencyContact?:string;notes?:string}
 export interface Tenancy{_id?:string;id?:string;tenantId:string;roomId:string;moveIn:string;moveOut?:string|null;status:'active'|'ended'}
 export interface Enrollment{_id?:string;id?:string;applicantName:string;phone:string;email:string;propertyId:string;roomId:string;moveIn:string;status:string;rejectionReason?:string;documents?:Array<{category:string;name:string;type:string;size:number}>}
-export interface Invoice{_id?:string;id?:string;tenantId:string;roomId?:string;month:string;dueDate:string;originalItems:Array<{kind:string;label:string;amountPaise:number}>;status:string}
+export interface Invoice{_id?:string;id?:string;tenantId:string;tenancyId?:string;propertyId?:string;roomId?:string;month:string;dueDate:string;originalItems:Array<{kind:string;label:string;amountPaise:number}>;status:string}
 export interface Payment{_id?:string;id?:string;invoiceId:string;tenantId:string;amountPaise:number;method:string;reference:string;status:string;rejectionReason?:string}
 export interface Ticket{_id?:string;id?:string;propertyId:string;roomId:string;tenantId:string;title:string;description:string;status:string}
 export interface Notice{_id?:string;id?:string;title:string;body:string;readAt?:string|null;createdAt?:string}

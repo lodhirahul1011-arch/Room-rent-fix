@@ -53,3 +53,13 @@ export async function downloadPrivateFile(fileAssetId:string,filename='roomrent-
  if(!response.ok)throw new ApiError(response.status,'Document download failed');
  const blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
+
+/** Authenticated binary response using the existing access-token refresh workflow. */
+export async function requestBlob(path:string,canRefresh=true):Promise<Blob>{
+ if(!path.startsWith('/api/'))throw Error('Only internal /api/ files are supported');
+ const session=currentSession();if(!session?.accessToken)throw new ApiError(401,'Authentication required');
+ const response=await fetch(API_BASE+path,{headers:{Authorization:'Bearer '+session.accessToken},cache:'no-store'});
+ if(response.status===401&&canRefresh&&session.refreshToken&&await refreshAccess())return requestBlob(path,false);
+ if(!response.ok){let body:ApiErrorBody={};try{body=await response.json() as ApiErrorBody}catch{}throw new ApiError(response.status,body.error?.message||'Could not load authorized file')}
+ return response.blob();
+}

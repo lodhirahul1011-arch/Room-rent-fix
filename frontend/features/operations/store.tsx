@@ -1,11 +1,8 @@
 'use client';
-import {createContext,useContext,useEffect,useState,type ReactNode} from 'react';
+import {createContext,useContext,type ReactNode} from 'react';
 import {initialOperations,type Operations} from './engine';
-const KEY='roomrent-phase6-operations-v1';
-const Ctx=createContext<{data:Operations;ready:boolean;update:(fn:(s:Operations)=>Operations)=>void}|null>(null);
-export function OperationsProvider({children}:{children:ReactNode}){const [data,setData]=useState<Operations>(initialOperations);const [ready,setReady]=useState(false);
- useEffect(()=>{try{const raw=localStorage.getItem(KEY);if(raw){const v=JSON.parse(raw);if(Array.isArray(v.tickets)&&Array.isArray(v.notices)&&Array.isArray(v.documents)&&Array.isArray(v.deposits))setData(v)}}catch{}setReady(true)},[]);
- const update=(fn:(s:Operations)=>Operations)=>{const next=fn(data);setData(next);try{localStorage.setItem(KEY,JSON.stringify(next))}catch{}};
- return <Ctx.Provider value={{data,ready,update}}>{children}</Ctx.Provider>;
-}
-export function useOperations(){const x=useContext(Ctx);if(!x)throw Error('OperationsProvider missing');return x;}
+import {useBrowserState} from '@/features/workspace/browser-state';
+const Context=createContext<{data:Operations;ready:boolean;update:(fn:(s:Operations)=>Operations)=>void}|null>(null);
+const normalize=(raw:unknown):Operations=>{const value=raw as Operations;if(!value||!['tickets','notices','documents','deposits'].every(key=>Array.isArray(value[key as keyof Operations])))throw Error('Invalid operations');return value};
+export function OperationsProvider({children}:{children:ReactNode}){const state=useBrowserState('roomrent-phase6-operations-v1',initialOperations,normalize,'operations');return <Context.Provider value={{data:state.value,ready:state.ready,update:state.update}}>{children}</Context.Provider>}
+export function useOperations(){const context=useContext(Context);if(!context)throw Error('OperationsProvider missing');return context;}
